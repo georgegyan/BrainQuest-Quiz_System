@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="jumbotron bg-light p-5 rounded-lg m-3">
+    <h1 class="display-4">Welcome to BrainQuest</h1>
+    <p class="lead">A platform where admins can create quizzes and users can take them online.</p>
+    <hr class="my-4">
+    <p>Get started by registering or logging into your account.</p>
+    <div class="d-grid gap-2 d-md-block">
+        <a class="btn btn-primary btn-lg me-md-2" href="#" role="button">Register</a> <!-- Remove url tag -->
+        <a class="btn btn-secondary btn-lg" href="#" role="button">Login</a> <!-- Remove url tag -->
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-tachometer-alt fa-3x text-primary mb-3"></i>
+                <h5 class="card-title">Admin Dashboard</h5>
+                <p class="card-text">Create and manage quizzes, view results, and generate reports.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-question-circle fa-3x text-success mb-3"></i>
+                <h5 class="card-title">Take Quizzes</h5>
+                <p class="card-text">Test your knowledge with our timed quizzes and get instant results.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-chart-bar fa-3x text-info mb-3"></i>
+                <h5 class="card-title">Track Progress</h5>
+                <p class="card-text">Monitor your performance with detailed analytics and reports.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
