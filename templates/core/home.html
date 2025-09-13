@@ -1,15 +1,25 @@
 {% extends 'base.html' %}
+{% load user_tags %}
 
 {% block content %}
 <div class="jumbotron bg-light p-5 rounded-lg m-3">
     <h1 class="display-4">Welcome to BrainQuest</h1>
     <p class="lead">A platform where admins can create quizzes and users can take them online.</p>
     <hr class="my-4">
-    <p>Get started by registering or logging into your account.</p>
-    <div class="d-grid gap-2 d-md-block">
-        <a class="btn btn-primary btn-lg me-md-2" href="{% url 'users:register' %}" role="button">Register</a>
-        <a class="btn btn-secondary btn-lg" href="{% url 'users:login' %}" role="button">Login</a>
-    </div>
+    
+    {% if user.is_authenticated %}
+        <p>Welcome back, {{ user.username }}! Ready to take some quizzes?</p>
+        <div class="d-grid gap-2 d-md-block">
+            <a class="btn btn-primary btn-lg me-md-2" href="{% url 'quizzes:quiz_list' %}" role="button">View Quizzes</a>
+            <a class="btn btn-outline-secondary btn-lg" href="{% url 'users:profile' %}" role="button">My Profile</a>
+        </div>
+    {% else %}
+        <p>Get started by registering or logging into your account.</p>
+        <div class="d-grid gap-2 d-md-block">
+            <a class="btn btn-primary btn-lg me-md-2" href="{% url 'users:register' %}" role="button">Register</a>
+            <a class="btn btn-secondary btn-lg" href="{% url 'users:login' %}" role="button">Login</a>
+        </div>
+    {% endif %}
 </div>
 
 <div class="row mt-5">
