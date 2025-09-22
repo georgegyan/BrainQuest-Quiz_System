@@ -27,7 +27,7 @@
                         </a>
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="{% url 'users:profile' %}">Profile</a></li>
-                            {% if user|is_admin %}
+                            {% if user.is_authenticated and user.is_staff or user.role == 'admin' %}
                             <li><a class="dropdown-item" href="{% url 'quizzes:quiz_list' %}">Manage Quizzes</a></li>
                             {% endif %}
                             <li><hr class="dropdown-divider"></li>

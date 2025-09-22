@@ -6,7 +6,7 @@ User = get_user_model()
 class Quiz(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
-    duration = models.PositiveIntegerField(help_text="Duration in minutes")  # Duration in minutes
+    duration = models.PositiveIntegerField(help_text="Duration in minutes")
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='quizzes_created')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

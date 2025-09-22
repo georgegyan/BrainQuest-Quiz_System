@@ -1,11 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import Quiz, Question
 from .forms import QuizForm, QuestionForm
-
-def is_admin(user):
-    return user.is_authenticated and (user.is_staff or user.role == 'admin')
 
 @login_required
 def quiz_list(request):
@@ -14,8 +11,11 @@ def quiz_list(request):
     return render(request, 'quizzes/quiz_list.html', context)
 
 @login_required
-@user_passes_test(is_admin)
 def quiz_create(request):
+    if not request.user.is_staff and getattr(request.user, 'role', None) != 'admin':
+        messages.error(request, 'You do not have permission to create quizzes.')
+        return redirect('quizzes:quiz_list')
+    
     if request.method == 'POST':
         form = QuizForm(request.POST)
         if form.is_valid():
@@ -29,15 +29,17 @@ def quiz_create(request):
     return render(request, 'quizzes/quiz_form.html', {'form': form, 'title': 'Create Quiz'})
 
 @login_required
-@user_passes_test(is_admin)
 def quiz_detail(request, quiz_id):
-    quiz = get_object_or_404(Quiz, id=quiz_id)
+    quiz = get_object_or_404(Quiz, id=quiz_id, is_active=True)
     questions = quiz.questions.all()
     return render(request, 'quizzes/quiz_detail.html', {'quiz': quiz, 'questions': questions})
 
 @login_required
-@user_passes_test(is_admin)
 def question_create(request, quiz_id):
+    if not request.user.is_staff and getattr(request.user, 'role', None) != 'admin':
+        messages.error(request, 'You do not have permission to add questions.')
+        return redirect('quizzes:quiz_list')
+    
     quiz = get_object_or_404(Quiz, id=quiz_id)
     
     if request.method == 'POST':
@@ -54,8 +56,11 @@ def question_create(request, quiz_id):
     return render(request, 'quizzes/question_form.html', {'form': form, 'quiz': quiz})
 
 @login_required
-@user_passes_test(is_admin)
 def quiz_edit(request, quiz_id):
+    if not request.user.is_staff and getattr(request.user, 'role', None) != 'admin':
+        messages.error(request, 'You do not have permission to edit quizzes.')
+        return redirect('quizzes:quiz_list')
+    
     quiz = get_object_or_404(Quiz, id=quiz_id)
     
     if request.method == 'POST':
@@ -70,8 +75,11 @@ def quiz_edit(request, quiz_id):
     return render(request, 'quizzes/quiz_form.html', {'form': form, 'title': 'Edit Quiz', 'quiz': quiz})
 
 @login_required
-@user_passes_test(is_admin)
 def quiz_delete(request, quiz_id):
+    if not request.user.is_staff and getattr(request.user, 'role', None) != 'admin':
+        messages.error(request, 'You do not have permission to delete quizzes.')
+        return redirect('quizzes:quiz_list')
+    
     quiz = get_object_or_404(Quiz, id=quiz_id)
     if request.method == 'POST':
         quiz.is_active = False
