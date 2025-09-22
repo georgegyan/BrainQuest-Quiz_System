@@ -167,7 +167,7 @@ def take_quiz(request, submission_id):
             
             if current_question.question_type in ['mcq', 'true_false']:
                 user_answer.chosen_option = answer_data
-            else:  # short_answer
+            else: 
                 user_answer.answer_text = answer_data
             
             user_answer.check_answer()

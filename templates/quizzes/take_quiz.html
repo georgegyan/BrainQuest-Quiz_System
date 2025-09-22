@@ -13,6 +13,12 @@
         50% { background-color: #ffcccc; }
         100% { background-color: normal; }
     }
+    .form-check-input {
+        margin-right: 10px;
+    }
+    .form-check-label {
+        cursor: pointer;
+    }
 </style>
 {% endblock %}
 
@@ -25,7 +31,7 @@
                 <h4 class="mb-0">{{ submission.quiz.title }}</h4>
                 <div class="text-end">
                     <div id="timer" class="h5 mb-0 {% if time_remaining < 5 %}timer-warning text-danger{% endif %}">
-                        Time Left: <span id="minutes">{{ time_remaining|divisibleby:1|yesno:time_remaining|floatformat:0 }}</span>:<span id="seconds">00</span>
+                        Time Left: <span id="minutes">{{ time_remaining }}</span>:<span id="seconds">00</span>
                     </div>
                     <small>Question {{ current_question_number }} of {{ total_questions }}</small>
                 </div>
@@ -57,7 +63,7 @@
                     
                     <div class="mb-4">
                         <p class="h6">{{ question.question_text }}</p>
-                        <small class="text-muted">Points: {{ question.points }}</small>
+                        <small class="text-muted">Points: {{ question.points }} | Type: {{ question.get_question_type_display }}</small>
                     </div>
                     
                     {% if form.fields.answer.widget.input_type == 'radio' %}
@@ -75,11 +81,27 @@
                     {% else %}
                         <!-- Short Answer -->
                         <div class="form-group">
+                            <label for="{{ form.answer.id_for_label }}" class="form-label">Your Answer:</label>
                             {{ form.answer }}
+                            {% if form.answer.errors %}
+                            <div class="text-danger">
+                                {% for error in form.answer.errors %}
+                                <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
                         </div>
                     {% endif %}
                     
-                    <div class="d-grid gap-2">
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                        <small>{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="d-grid gap-2 mt-4">
                         <button type="submit" class="btn btn-primary btn-lg">
                             {% if current_question_number == total_questions %}
                                 Finish Quiz
@@ -119,6 +141,10 @@
         }
     }
     
+    // Initialize timer display
+    document.getElementById('minutes').textContent = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+    document.getElementById('seconds').textContent = (totalSeconds % 60).toString().padStart(2, '0');
+    
     // Update timer every second
     setInterval(updateTimer, 1000);
     
@@ -128,6 +154,23 @@
             e.preventDefault();
             e.returnValue = '';
         }
+    });
+
+    // Add some interactive features
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add focus to the first form element
+        const firstInput = document.querySelector('input[type="radio"], textarea');
+        if (firstInput) {
+            firstInput.focus();
+        }
+        
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Ctrl+Enter to submit form
+            if (e.ctrlKey && e.key === 'Enter') {
+                document.getElementById('quiz-form').submit();
+            }
+        });
     });
 </script>
 {% endblock %}

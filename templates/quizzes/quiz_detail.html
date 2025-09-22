@@ -54,19 +54,19 @@
                 </a>
                 
                 <!-- Check for existing submissions -->
-                {% with active_submissions=user.quiz_submissions.filter(quiz=quiz, is_completed=False) %}
-                    {% if active_submissions %}
+                {% for submission in user.quiz_submissions.all %}
+                    {% if submission.quiz.id == quiz.id and not submission.is_completed %}
                     <div class="mt-3">
                         <p class="text-warning">
                             <i class="fas fa-exclamation-triangle"></i>
                             You have an incomplete attempt. You can resume from where you left off.
                         </p>
-                        <a href="{% url 'quizzes:take_quiz' active_submissions.first.id %}" class="btn btn-warning btn-sm">
+                        <a href="{% url 'quizzes:take_quiz' submission.id %}" class="btn btn-warning btn-sm">
                             <i class="fas fa-redo"></i> Resume Quiz
                         </a>
                     </div>
                     {% endif %}
-                {% endwith %}
+                {% endfor %}
             </div>
         </div>
         {% endif %}
@@ -74,92 +74,86 @@
         <!-- Questions Section -->
         <h4>Questions ({{ questions.count }})</h4>
         
-        {% for question in questions %}
-        <div class="card mb-3">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <h6 class="card-title mb-0">Question {{ forloop.counter }}</h6>
-                    <span class="badge bg-secondary">{{ question.get_question_type_display }}</span>
-                </div>
-                
-                <p class="card-text">{{ question.question_text }}</p>
-                
-                {% if question.question_type == 'mcq' %}
-                <div class="options-container mt-3">
-                    <p class="text-muted mb-2"><strong>Options:</strong></p>
-                    <div class="row">
-                        {% if question.option_a %}
-                        <div class="col-md-6 mb-2">
-                            <span class="badge bg-light text-dark">A) {{ question.option_a }}</span>
+        {% if questions %}
+            {% for question in questions %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="card-title mb-0">Question {{ forloop.counter }}</h6>
+                        <span class="badge bg-secondary">{{ question.get_question_type_display }}</span>
+                    </div>
+                    
+                    <p class="card-text">{{ question.question_text }}</p>
+                    
+                    {% if question.question_type == 'mcq' %}
+                    <div class="options-container mt-3">
+                        <p class="text-muted mb-2"><strong>Options:</strong></p>
+                        <div class="row">
+                            {% if question.option_a %}
+                            <div class="col-md-6 mb-2">
+                                <span class="badge bg-light text-dark">A) {{ question.option_a }}</span>
+                            </div>
+                            {% endif %}
+                            {% if question.option_b %}
+                            <div class="col-md-6 mb-2">
+                                <span class="badge bg-light text-dark">B) {{ question.option_b }}</span>
+                            </div>
+                            {% endif %}
+                            {% if question.option_c %}
+                            <div class="col-md-6 mb-2">
+                                <span class="badge bg-light text-dark">C) {{ question.option_c }}</span>
+                            </div>
+                            {% endif %}
+                            {% if question.option_d %}
+                            <div class="col-md-6 mb-2">
+                                <span class="badge bg-light text-dark">D) {{ question.option_d }}</span>
+                            </div>
+                            {% endif %}
                         </div>
-                        {% endif %}
-                        {% if question.option_b %}
-                        <div class="col-md-6 mb-2">
-                            <span class="badge bg-light text-dark">B) {{ question.option_b }}</span>
-                        </div>
-                        {% endif %}
-                        {% if question.option_c %}
-                        <div class="col-md-6 mb-2">
-                            <span class="badge bg-light text-dark">C) {{ question.option_c }}</span>
-                        </div>
-                        {% endif %}
-                        {% if question.option_d %}
-                        <div class="col-md-6 mb-2">
-                            <span class="badge bg-light text-dark">D) {{ question.option_d }}</span>
-                        </div>
+                        {% if question.correct_option %}
+                        <small class="text-muted">Correct answer: {{ question.correct_option|upper }}</small>
                         {% endif %}
                     </div>
-                    <small class="text-muted">Correct answer: {{ question.correct_option|upper }}</small>
-                </div>
-                
-                {% elif question.question_type == 'true_false' %}
-                <div class="options-container mt-3">
-                    <p class="text-muted mb-2"><strong>Options:</strong></p>
-                    <div>
-                        <span class="badge bg-light text-dark me-2">True</span>
-                        <span class="badge bg-light text-dark">False</span>
+                    
+                    {% elif question.question_type == 'true_false' %}
+                    <div class="options-container mt-3">
+                        <p class="text-muted mb-2"><strong>Options:</strong></p>
+                        <div>
+                            <span class="badge bg-light text-dark me-2">True</span>
+                            <span class="badge bg-light text-dark">False</span>
+                        </div>
+                        {% if question.correct_option %}
+                        <small class="text-muted">Correct answer: {% if question.correct_option == 'a' %}True{% else %}False{% endif %}</small>
+                        {% endif %}
                     </div>
-                    <small class="text-muted">Correct answer: {% if question.correct_option == 'a' %}True{% else %}False{% endif %}</small>
+                    
+                    {% elif question.question_type == 'short_answer' %}
+                    <div class="short-answer-container mt-3">
+                        <p class="text-muted"><strong>Type:</strong> Short Answer</p>
+                        {% if question.correct_answer %}
+                        <small class="text-muted">Expected answer: {{ question.correct_answer }}</small>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            <i class="fas fa-star"></i> Points: {{ question.points }}
+                        </small>
+                    </div>
                 </div>
-                
-                {% elif question.question_type == 'short_answer' %}
-                <div class="short-answer-container mt-3">
-                    <p class="text-muted"><strong>Type:</strong> Short Answer</p>
-                    <small class="text-muted">Expected answer: {{ question.correct_answer }}</small>
-                </div>
-                {% endif %}
-                
-                <div class="mt-3">
-                    <small class="text-muted">
-                        <i class="fas fa-star"></i> Points: {{ question.points }}
-                    </small>
-                </div>
-                
-                <!-- Admin actions -->
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> No questions added yet.
                 {% if user.is_authenticated and user.is_staff or user.role == 'admin' %}
-                <div class="mt-3 pt-3 border-top">
-                    <small>
-                        <a href="#" class="text-decoration-none me-3">
-                            <i class="fas fa-edit text-primary"></i> Edit
-                        </a>
-                        <a href="#" class="text-decoration-none text-danger">
-                            <i class="fas fa-trash"></i> Delete
-                        </a>
-                    </small>
-                </div>
+                <a href="{% url 'quizzes:question_create' quiz.id %}" class="alert-link">Add the first question!</a>
                 {% endif %}
             </div>
-        </div>
-        {% empty %}
-        <div class="alert alert-info">
-            <i class="fas fa-info-circle"></i> No questions added yet.
-            {% if user.is_authenticated and user.is_staff or user.role == 'admin' %}
-            <a href="{% url 'quizzes:question_create' quiz.id %}" class="alert-link">Add the first question!</a>
-            {% endif %}
-        </div>
-        {% endfor %}
+        {% endif %}
 
-        <!-- Quiz Statistics (for admins) -->
+        <!-- Quiz Statistics (for admins) - Simplified -->
         {% if user.is_authenticated and user.is_staff or user.role == 'admin' %}
         <div class="card mt-4">
             <div class="card-header">
@@ -167,41 +161,25 @@
             </div>
             <div class="card-body">
                 <div class="row text-center">
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="h4 text-primary">{{ quiz.submissions.count }}</div>
                         <small class="text-muted">Total Attempts</small>
                     </div>
-                    <div class="col-md-3">
-                        <div class="h4 text-success">
-                            {% if quiz.submissions.count > 0 %}
-                                {{ quiz.submissions.aggregate.avg_score|default:0|floatformat:1 }}%
-                            {% else %}
-                                0%
-                            {% endif %}
-                        </div>
-                        <small class="text-muted">Average Score</small>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="h4 text-warning">
-                            {% with completed=quiz.submissions.filter.is_completed=True %}
-                                {{ completed.count }}
-                            {% endwith %}
-                        </div>
-                        <small class="text-muted">Completed</small>
-                    </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="h4 text-info">{{ questions.count }}</div>
                         <small class="text-muted">Questions</small>
                     </div>
+                    <div class="col-md-4">
+                        <div class="h4 text-success">
+                            {% if quiz.is_active %}
+                            <i class="fas fa-check text-success"></i> Active
+                            {% else %}
+                            <i class="fas fa-times text-secondary"></i> Inactive
+                            {% endif %}
+                        </div>
+                        <small class="text-muted">Status</small>
+                    </div>
                 </div>
-                
-                {% if quiz.submissions.count > 0 %}
-                <div class="mt-3">
-                    <a href="#" class="btn btn-outline-primary btn-sm">
-                        <i class="fas fa-chart-bar"></i> View Detailed Analytics
-                    </a>
-                </div>
-                {% endif %}
             </div>
         </div>
         {% endif %}
@@ -222,9 +200,6 @@
                     </a>
                     <a href="{% url 'quizzes:quiz_edit' quiz.id %}" class="btn btn-outline-secondary btn-sm">
                         <i class="fas fa-edit"></i> Edit Quiz
-                    </a>
-                    <a href="{% url 'quizzes:quiz_delete' quiz.id %}" class="btn btn-outline-danger btn-sm">
-                        <i class="fas fa-trash"></i> Delete Quiz
                     </a>
                 </div>
             </div>
@@ -255,8 +230,10 @@
                     <small class="text-muted">Question Types:</small>
                     <br>
                     <div class="mt-1">
-                        {% for type in question_types %}
-                        <span class="badge bg-light text-dark me-1">{{ type }}</span>
+                        {% for question in questions %}
+                            <span class="badge bg-light text-dark me-1 mb-1">{{ question.get_question_type_display }}</span>
+                        {% empty %}
+                            <small class="text-muted">No questions yet</small>
                         {% endfor %}
                     </div>
                 </div>
@@ -270,23 +247,27 @@
                 <h6 class="mb-0">Recent Activity</h6>
             </div>
             <div class="card-body">
-                {% with recent_submissions=quiz.submissions.all|slice:":5" %}
-                    {% if recent_submissions %}
+                {% if quiz.submissions.all %}
                     <div class="list-group list-group-flush">
-                        {% for submission in recent_submissions %}
+                        {% for submission in quiz.submissions.all|slice:":3" %}
                         <div class="list-group-item px-0 py-2">
                             <div class="d-flex justify-content-between">
                                 <small class="text-truncate">{{ submission.user.username }}</small>
                                 <small class="text-muted">{{ submission.started_at|timesince }} ago</small>
                             </div>
-                            <small class="text-muted">{{ submission.score|floatformat:1 }}%</small>
+                            <small class="text-muted">
+                                {% if submission.is_completed %}
+                                    Score: {{ submission.score|floatformat:1 }}%
+                                {% else %}
+                                    <span class="text-warning">In progress</span>
+                                {% endif %}
+                            </small>
                         </div>
                         {% endfor %}
                     </div>
-                    {% else %}
+                {% else %}
                     <p class="text-muted text-center mb-0">No recent activity</p>
-                    {% endif %}
-                {% endwith %}
+                {% endif %}
             </div>
         </div>
         {% endif %}
@@ -296,15 +277,16 @@
 
 {% block extra_js %}
 <script>
-// Add any JavaScript needed for the quiz detail page
+// Simple JavaScript for the quiz detail page
 document.addEventListener('DOMContentLoaded', function() {
-    // Example: Add confirmation for quiz deletion
-    const deleteButtons = document.querySelectorAll('a[href*="delete"]');
-    deleteButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            if (!confirm('Are you sure you want to delete this quiz? This action cannot be undone.')) {
-                e.preventDefault();
-            }
+    console.log('Quiz detail page loaded');
+    
+    // Add smooth scrolling to questions
+    const questionCards = document.querySelectorAll('.card.mb-3');
+    questionCards.forEach((card, index) => {
+        card.style.cursor = 'pointer';
+        card.addEventListener('click', function() {
+            this.classList.toggle('border-primary');
         });
     });
 });
