@@ -17,10 +17,13 @@
 
 <div class="row">
     <div class="col-md-8">
+        <!-- Quiz Details Card -->
         <div class="card mb-4">
             <div class="card-body">
                 <h5 class="card-title">Quiz Details</h5>
+                {% if quiz.description %}
                 <p class="card-text">{{ quiz.description }}</p>
+                {% endif %}
                 <p class="text-muted">
                     <i class="fas fa-clock"></i> Duration: {{ quiz.duration }} minutes
                     <br>
@@ -40,26 +43,270 @@
             </div>
         </div>
 
-        <h4>Questions</h4>
+        <!-- Start Quiz Button (for regular users) -->
+        {% if user.is_authenticated and not user.is_staff and user.role != 'admin' %}
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <h5>Ready to take the quiz?</h5>
+                <p class="text-muted">You have {{ quiz.duration }} minutes to complete {{ questions.count }} questions.</p>
+                <a href="{% url 'quizzes:start_quiz' quiz.id %}" class="btn btn-success btn-lg">
+                    <i class="fas fa-play"></i> Start Quiz
+                </a>
+                
+                <!-- Check for existing submissions -->
+                {% with active_submissions=user.quiz_submissions.filter(quiz=quiz, is_completed=False) %}
+                    {% if active_submissions %}
+                    <div class="mt-3">
+                        <p class="text-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            You have an incomplete attempt. You can resume from where you left off.
+                        </p>
+                        <a href="{% url 'quizzes:take_quiz' active_submissions.first.id %}" class="btn btn-warning btn-sm">
+                            <i class="fas fa-redo"></i> Resume Quiz
+                        </a>
+                    </div>
+                    {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Questions Section -->
+        <h4>Questions ({{ questions.count }})</h4>
+        
         {% for question in questions %}
         <div class="card mb-3">
             <div class="card-body">
-                <h6 class="card-title">Question {{ forloop.counter }}</h6>
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h6 class="card-title mb-0">Question {{ forloop.counter }}</h6>
+                    <span class="badge bg-secondary">{{ question.get_question_type_display }}</span>
+                </div>
+                
                 <p class="card-text">{{ question.question_text }}</p>
-                <p class="text-muted">
-                    Type: {{ question.get_question_type_display }}
-                    | Points: {{ question.points }}
-                </p>
+                
+                {% if question.question_type == 'mcq' %}
+                <div class="options-container mt-3">
+                    <p class="text-muted mb-2"><strong>Options:</strong></p>
+                    <div class="row">
+                        {% if question.option_a %}
+                        <div class="col-md-6 mb-2">
+                            <span class="badge bg-light text-dark">A) {{ question.option_a }}</span>
+                        </div>
+                        {% endif %}
+                        {% if question.option_b %}
+                        <div class="col-md-6 mb-2">
+                            <span class="badge bg-light text-dark">B) {{ question.option_b }}</span>
+                        </div>
+                        {% endif %}
+                        {% if question.option_c %}
+                        <div class="col-md-6 mb-2">
+                            <span class="badge bg-light text-dark">C) {{ question.option_c }}</span>
+                        </div>
+                        {% endif %}
+                        {% if question.option_d %}
+                        <div class="col-md-6 mb-2">
+                            <span class="badge bg-light text-dark">D) {{ question.option_d }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <small class="text-muted">Correct answer: {{ question.correct_option|upper }}</small>
+                </div>
+                
+                {% elif question.question_type == 'true_false' %}
+                <div class="options-container mt-3">
+                    <p class="text-muted mb-2"><strong>Options:</strong></p>
+                    <div>
+                        <span class="badge bg-light text-dark me-2">True</span>
+                        <span class="badge bg-light text-dark">False</span>
+                    </div>
+                    <small class="text-muted">Correct answer: {% if question.correct_option == 'a' %}True{% else %}False{% endif %}</small>
+                </div>
+                
+                {% elif question.question_type == 'short_answer' %}
+                <div class="short-answer-container mt-3">
+                    <p class="text-muted"><strong>Type:</strong> Short Answer</p>
+                    <small class="text-muted">Expected answer: {{ question.correct_answer }}</small>
+                </div>
+                {% endif %}
+                
+                <div class="mt-3">
+                    <small class="text-muted">
+                        <i class="fas fa-star"></i> Points: {{ question.points }}
+                    </small>
+                </div>
+                
+                <!-- Admin actions -->
+                {% if user.is_authenticated and user.is_staff or user.role == 'admin' %}
+                <div class="mt-3 pt-3 border-top">
+                    <small>
+                        <a href="#" class="text-decoration-none me-3">
+                            <i class="fas fa-edit text-primary"></i> Edit
+                        </a>
+                        <a href="#" class="text-decoration-none text-danger">
+                            <i class="fas fa-trash"></i> Delete
+                        </a>
+                    </small>
+                </div>
+                {% endif %}
             </div>
         </div>
         {% empty %}
         <div class="alert alert-info">
             <i class="fas fa-info-circle"></i> No questions added yet.
             {% if user.is_authenticated and user.is_staff or user.role == 'admin' %}
-            <a href="{% url 'quizzes:question_create' quiz.id %}">Add the first question!</a>
+            <a href="{% url 'quizzes:question_create' quiz.id %}" class="alert-link">Add the first question!</a>
             {% endif %}
         </div>
         {% endfor %}
+
+        <!-- Quiz Statistics (for admins) -->
+        {% if user.is_authenticated and user.is_staff or user.role == 'admin' %}
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">Quiz Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <div class="h4 text-primary">{{ quiz.submissions.count }}</div>
+                        <small class="text-muted">Total Attempts</small>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="h4 text-success">
+                            {% if quiz.submissions.count > 0 %}
+                                {{ quiz.submissions.aggregate.avg_score|default:0|floatformat:1 }}%
+                            {% else %}
+                                0%
+                            {% endif %}
+                        </div>
+                        <small class="text-muted">Average Score</small>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="h4 text-warning">
+                            {% with completed=quiz.submissions.filter.is_completed=True %}
+                                {{ completed.count }}
+                            {% endwith %}
+                        </div>
+                        <small class="text-muted">Completed</small>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="h4 text-info">{{ questions.count }}</div>
+                        <small class="text-muted">Questions</small>
+                    </div>
+                </div>
+                
+                {% if quiz.submissions.count > 0 %}
+                <div class="mt-3">
+                    <a href="#" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-chart-bar"></i> View Detailed Analytics
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Sidebar -->
+    <div class="col-md-4">
+        <!-- Quick Actions Card -->
+        {% if user.is_authenticated and user.is_staff or user.role == 'admin' %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'quizzes:question_create' quiz.id %}" class="btn btn-success btn-sm">
+                        <i class="fas fa-plus"></i> Add Question
+                    </a>
+                    <a href="{% url 'quizzes:quiz_edit' quiz.id %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-edit"></i> Edit Quiz
+                    </a>
+                    <a href="{% url 'quizzes:quiz_delete' quiz.id %}" class="btn btn-outline-danger btn-sm">
+                        <i class="fas fa-trash"></i> Delete Quiz
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Quiz Info Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">Quiz Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <small class="text-muted">Status:</small>
+                    <br>
+                    <span class="badge {% if quiz.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                        {% if quiz.is_active %}Active{% else %}Inactive{% endif %}
+                    </span>
+                </div>
+                
+                <div class="mb-2">
+                    <small class="text-muted">Last Updated:</small>
+                    <br>
+                    <small>{{ quiz.updated_at|date:"M d, Y H:i" }}</small>
+                </div>
+                
+                <div class="mb-2">
+                    <small class="text-muted">Question Types:</small>
+                    <br>
+                    <div class="mt-1">
+                        {% for type in question_types %}
+                        <span class="badge bg-light text-dark me-1">{{ type }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity Card -->
+        {% if user.is_authenticated and user.is_staff or user.role == 'admin' %}
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Recent Activity</h6>
+            </div>
+            <div class="card-body">
+                {% with recent_submissions=quiz.submissions.all|slice:":5" %}
+                    {% if recent_submissions %}
+                    <div class="list-group list-group-flush">
+                        {% for submission in recent_submissions %}
+                        <div class="list-group-item px-0 py-2">
+                            <div class="d-flex justify-content-between">
+                                <small class="text-truncate">{{ submission.user.username }}</small>
+                                <small class="text-muted">{{ submission.started_at|timesince }} ago</small>
+                            </div>
+                            <small class="text-muted">{{ submission.score|floatformat:1 }}%</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center mb-0">No recent activity</p>
+                    {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add any JavaScript needed for the quiz detail page
+document.addEventListener('DOMContentLoaded', function() {
+    // Example: Add confirmation for quiz deletion
+    const deleteButtons = document.querySelectorAll('a[href*="delete"]');
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            if (!confirm('Are you sure you want to delete this quiz? This action cannot be undone.')) {
+                e.preventDefault();
+            }
+        });
+    });
+});
+</script>
 {% endblock %}

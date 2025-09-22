@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block extra_css %}
+<style>
+    .progress-bar {
+        transition: width 0.3s ease;
+    }
+    .timer-warning {
+        animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+        0% { background-color: normal; }
+        50% { background-color: #ffcccc; }
+        100% { background-color: normal; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <!-- Quiz Header -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">{{ submission.quiz.title }}</h4>
+                <div class="text-end">
+                    <div id="timer" class="h5 mb-0 {% if time_remaining < 5 %}timer-warning text-danger{% endif %}">
+                        Time Left: <span id="minutes">{{ time_remaining|divisibleby:1|yesno:time_remaining|floatformat:0 }}</span>:<span id="seconds">00</span>
+                    </div>
+                    <small>Question {{ current_question_number }} of {{ total_questions }}</small>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Progress Bar -->
+                <div class="progress mb-3" style="height: 10px;">
+                    <div class="progress-bar bg-success" role="progressbar" 
+                         style="width: {{ progress }}%;" 
+                         aria-valuenow="{{ progress }}" 
+                         aria-valuemin="0" 
+                         aria-valuemax="100">
+                    </div>
+                </div>
+                <div class="text-center">
+                    <small class="text-muted">{{ progress }}% Complete</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Question Form -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Question {{ current_question_number }}</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" id="quiz-form">
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        <p class="h6">{{ question.question_text }}</p>
+                        <small class="text-muted">Points: {{ question.points }}</small>
+                    </div>
+                    
+                    {% if form.fields.answer.widget.input_type == 'radio' %}
+                        <!-- Multiple Choice / True False -->
+                        <div class="form-group">
+                            {% for choice in form.answer %}
+                            <div class="form-check mb-3">
+                                {{ choice.tag }}
+                                <label class="form-check-label" for="{{ choice.id_for_label }}">
+                                    {{ choice.choice_label }}
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <!-- Short Answer -->
+                        <div class="form-group">
+                            {{ form.answer }}
+                        </div>
+                    {% endif %}
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            {% if current_question_number == total_questions %}
+                                Finish Quiz
+                            {% else %}
+                                Next Question
+                            {% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Timer functionality
+    let totalSeconds = {{ time_remaining }} * 60;
+    
+    function updateTimer() {
+        if (totalSeconds <= 0) {
+            document.getElementById('quiz-form').submit();
+            return;
+        }
+        
+        totalSeconds--;
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        
+        document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
+        document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
+        
+        // Add warning styles when time is running low
+        if (minutes < 1) {
+            document.getElementById('timer').classList.add('timer-warning', 'text-danger');
+        }
+    }
+    
+    // Update timer every second
+    setInterval(updateTimer, 1000);
+    
+    // Prevent leaving the page accidentally
+    window.addEventListener('beforeunload', function (e) {
+        if (totalSeconds > 0) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+</script>
+{% endblock %}

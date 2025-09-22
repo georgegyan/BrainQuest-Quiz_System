@@ -10,4 +10,7 @@ urlpatterns = [
     path('<int:quiz_id>/edit/', views.quiz_edit, name='quiz_edit'),
     path('<int:quiz_id>/delete/', views.quiz_delete, name='quiz_delete'),
     path('<int:quiz_id>/question/add/', views.question_create, name='question_create'),
+    path('<int:quiz_id>/start/', views.start_quiz, name='start_quiz'),
+    path('submission/<int:submission_id>/', views.take_quiz, name='take_quiz'),
+    path('submission/<int:submission_id>/result/', views.quiz_result, name='quiz_result'),
 ]
