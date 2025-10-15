@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h2 class="mb-4">Admin Dashboard</h2>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center bg-primary text-white">
+            <div class="card-body">
+                <h3 class="card-title">{{ total_quizzes }}</h3>
+                <p class="card-text">Active Quizzes</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center bg-success text-white">
+            <div class="card-body">
+                <h3 class="card-title">{{ total_users }}</h3>
+                <p class="card-text">Total Users</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center bg-info text-white">
+            <div class="card-body">
+                <h3 class="card-title">{{ total_submissions }}</h3>
+                <p class="card-text">Total Submissions</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center bg-warning text-white">
+            <div class="card-body">
+                <h3 class="card-title">{{ completed_submissions }}</h3>
+                <p class="card-text">Completed</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent Activity -->
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Recent Quiz Attempts</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_submissions %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Quiz</th>
+                                <th>Score</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for submission in recent_submissions %}
+                            <tr>
+                                <td>{{ submission.user.username }}</td>
+                                <td>{{ submission.quiz.title }}</td>
+                                <td>
+                                    {% if submission.is_completed %}
+                                    <span class="badge {% if submission.score >= 80 %}bg-success{% elif submission.score >= 60 %}bg-warning{% else %}bg-danger{% endif %}">
+                                        {{ submission.score|floatformat:1 }}%
+                                    </span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">In Progress</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ submission.started_at|date:"M d, Y" }}</td>
+                                <td>
+                                    <a href="{% url 'results:submission_detail' submission.id %}" 
+                                       class="btn btn-sm btn-outline-primary">View</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center">No submissions yet.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Quiz Statistics -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Quiz Performance</h5>
+            </div>
+            <div class="card-body">
+                {% if quiz_stats %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Quiz</th>
+                                <th>Attempts</th>
+                                <th>Avg Score</th>
+                                <th>Best Score</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for quiz in quiz_stats %}
+                            <tr>
+                                <td>{{ quiz.title }}</td>
+                                <td>{{ quiz.submission_count }}</td>
+                                <td>{{ quiz.avg_score|default:0|floatformat:1 }}%</td>
+                                <td>{{ quiz.best_score|default:0|floatformat:1 }}%</td>
+                                <td>
+                                    <a href="{% url 'results:quiz_analytics' quiz.id %}" 
+                                       class="btn btn-sm btn-outline-info">Analytics</a>
+                                    <a href="{% url 'quizzes:quiz_detail' quiz.id %}" 
+                                       class="btn btn-sm btn-outline-secondary">View</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center">No quiz statistics available.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Actions -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Admin Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'quizzes:quiz_create' %}" class="btn btn-success">
+                        <i class="fas fa-plus"></i> Create New Quiz
+                    </a>
+                    <a href="{% url 'quizzes:quiz_list' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-list"></i> Manage Quizzes
+                    </a>
+                    <a href="/admin/" class="btn btn-outline-secondary">
+                        <i class="fas fa-cog"></i> Django Admin
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity Stats -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">Recent Activity (7 days)</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6>New Users: {{ recent_users }}</h6>
+                    <div class="progress" style="height: 10px;">
+                        <div class="progress-bar bg-success" style="width: {% widthratio recent_users total_users 100 %}%"></div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <h6>Quiz Attempts: {{ recent_submissions_count }}</h6>
+                    <div class="progress" style="height: 10px;">
+                        <div class="progress-bar bg-info" style="width: {% widthratio recent_submissions_count total_submissions 100 %}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

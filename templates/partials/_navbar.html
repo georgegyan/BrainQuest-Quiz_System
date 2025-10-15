@@ -17,6 +17,11 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'quizzes:quiz_list' %}">Quizzes</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'results:dashboard' %}">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                </li>
                 {% endif %}
             </ul>
             <ul class="navbar-nav">
@@ -26,25 +31,42 @@
                             <i class="fas fa-user"></i> {{ user.username }}
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{% url 'users:profile' %}">Profile</a></li>
+                            <li><a class="dropdown-item" href="{% url 'users:profile' %}">
+                                <i class="fas fa-user-circle"></i> Profile
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'results:submission_history' %}">
+                                <i class="fas fa-history"></i> Quiz History
+                            </a></li>
                             {% if user.is_authenticated and user.is_staff or user.role == 'admin' %}
-                            <li><a class="dropdown-item" href="{% url 'quizzes:quiz_list' %}">Manage Quizzes</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'quizzes:quiz_list' %}">
+                                <i class="fas fa-cog"></i> Manage Quizzes
+                            </a></li>
+                            <li><a class="dropdown-item" href="/admin/">
+                                <i class="fas fa-tools"></i> Admin Panel
+                            </a></li>
                             {% endif %}
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <form method="post" action="{% url 'users:logout' %}">
                                     {% csrf_token %}
-                                    <button type="submit" class="dropdown-item">Logout</button>
+                                    <button type="submit" class="dropdown-item">
+                                        <i class="fas fa-sign-out-alt"></i> Logout
+                                    </button>
                                 </form>
                             </li>
                         </ul>
                     </li>
                 {% else %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'users:login' %}">Login</a>
+                        <a class="nav-link" href="{% url 'users:login' %}">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'users:register' %}">Register</a>
+                        <a class="nav-link" href="{% url 'users:register' %}">
+                            <i class="fas fa-user-plus"></i> Register
+                        </a>
                     </li>
                 {% endif %}
             </ul>
