@@ -72,9 +72,10 @@
         {% endif %}
 
         <!-- Questions Section -->
-        <h4>Questions ({{ questions.count }})</h4>
+        <h4>Questions Preview ({{ questions.count }})</h4>
         
-        {% if questions %}
+        {% if user.is_authenticated and user.is_staff or user.role == 'admin' %}
+            <!-- Admin View: Show questions with answers -->
             {% for question in questions %}
             <div class="card mb-3">
                 <div class="card-body">
@@ -110,9 +111,7 @@
                             </div>
                             {% endif %}
                         </div>
-                        {% if question.correct_option %}
                         <small class="text-muted">Correct answer: {{ question.correct_option|upper }}</small>
-                        {% endif %}
                     </div>
                     
                     {% elif question.question_type == 'true_false' %}
@@ -122,17 +121,13 @@
                             <span class="badge bg-light text-dark me-2">True</span>
                             <span class="badge bg-light text-dark">False</span>
                         </div>
-                        {% if question.correct_option %}
                         <small class="text-muted">Correct answer: {% if question.correct_option == 'a' %}True{% else %}False{% endif %}</small>
-                        {% endif %}
                     </div>
                     
                     {% elif question.question_type == 'short_answer' %}
                     <div class="short-answer-container mt-3">
                         <p class="text-muted"><strong>Type:</strong> Short Answer</p>
-                        {% if question.correct_answer %}
                         <small class="text-muted">Expected answer: {{ question.correct_answer }}</small>
-                        {% endif %}
                     </div>
                     {% endif %}
                     
@@ -143,17 +138,88 @@
                     </div>
                 </div>
             </div>
+            {% empty %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> No questions added yet.
+                <a href="{% url 'quizzes:question_create' quiz.id %}" class="alert-link">Add the first question!</a>
+            </div>
             {% endfor %}
+
         {% else %}
+            <!-- Regular User View: Show questions without answers -->
+            {% for question in questions %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="card-title mb-0">Question {{ forloop.counter }}</h6>
+                        <span class="badge bg-secondary">{{ question.get_question_type_display }}</span>
+                    </div>
+                    
+                    <p class="card-text">{{ question.question_text }}</p>
+                    
+                    {% if question.question_type == 'mcq' %}
+                    <div class="options-container mt-3">
+                        <p class="text-muted mb-2"><strong>Options:</strong></p>
+                        <div class="row">
+                            {% if question.option_a %}
+                            <div class="col-md-6 mb-2">
+                                <span class="badge bg-light text-dark">A) {{ question.option_a }}</span>
+                            </div>
+                            {% endif %}
+                            {% if question.option_b %}
+                            <div class="col-md-6 mb-2">
+                                <span class="badge bg-light text-dark">B) {{ question.option_b }}</span>
+                            </div>
+                            {% endif %}
+                            {% if question.option_c %}
+                            <div class="col-md-6 mb-2">
+                                <span class="badge bg-light text-dark">C) {{ question.option_c }}</span>
+                            </div>
+                            {% endif %}
+                            {% if question.option_d %}
+                            <div class="col-md-6 mb-2">
+                                <span class="badge bg-light text-dark">D) {{ question.option_d }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <small class="text-muted"><i class="fas fa-lock"></i> Correct answer hidden until quiz completion</small>
+                    </div>
+                    
+                    {% elif question.question_type == 'true_false' %}
+                    <div class="options-container mt-3">
+                        <p class="text-muted mb-2"><strong>Options:</strong></p>
+                        <div>
+                            <span class="badge bg-light text-dark me-2">True</span>
+                            <span class="badge bg-light text-dark">False</span>
+                        </div>
+                        <small class="text-muted"><i class="fas fa-lock"></i> Correct answer hidden until quiz completion</small>
+                    </div>
+                    
+                    {% elif question.question_type == 'short_answer' %}
+                    <div class="short-answer-container mt-3">
+                        <p class="text-muted"><strong>Type:</strong> Short Answer</p>
+                        <small class="text-muted"><i class="fas fa-lock"></i> Expected answer hidden until quiz completion</small>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            <i class="fas fa-star"></i> Points: {{ question.points }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
             <div class="alert alert-info">
                 <i class="fas fa-info-circle"></i> No questions added yet.
                 {% if user.is_authenticated and user.is_staff or user.role == 'admin' %}
                 <a href="{% url 'quizzes:question_create' quiz.id %}" class="alert-link">Add the first question!</a>
                 {% endif %}
             </div>
+            {% endfor %}
         {% endif %}
 
-        <!-- Quiz Statistics (for admins) - Simplified -->
+        <!-- Quiz Statistics (for admins) -->
         {% if user.is_authenticated and user.is_staff or user.role == 'admin' %}
         <div class="card mt-4">
             <div class="card-header">
@@ -273,22 +339,4 @@
         {% endif %}
     </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-// Simple JavaScript for the quiz detail page
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Quiz detail page loaded');
-    
-    // Add smooth scrolling to questions
-    const questionCards = document.querySelectorAll('.card.mb-3');
-    questionCards.forEach((card, index) => {
-        card.style.cursor = 'pointer';
-        card.addEventListener('click', function() {
-            this.classList.toggle('border-primary');
-        });
-    });
-});
-</script>
 {% endblock %}
