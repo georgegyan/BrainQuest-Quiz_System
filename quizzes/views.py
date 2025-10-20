@@ -2,11 +2,10 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
-from datetime import timedelta
-from results.models import QuizSubmission, UserAnswer
-from results.forms import QuizAnswerForm
 from .models import Quiz, Question
 from .forms import QuizForm, QuestionForm
+from results.models import QuizSubmission, UserAnswer
+from results.forms import QuizAnswerForm
 
 @login_required
 def quiz_list(request):

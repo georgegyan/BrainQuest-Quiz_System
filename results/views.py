@@ -3,7 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Avg, Count, Max, Min
 from django.utils import timezone
 from datetime import timedelta
-from quizzes.models import Quiz, QuizSubmission
+from quizzes.models import Quiz  # Only import Quiz from quizzes
+from results.models import QuizSubmission  # Import QuizSubmission from results
 from users.models import CustomUser
 
 @login_required
