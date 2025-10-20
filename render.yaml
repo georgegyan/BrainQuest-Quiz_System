@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: quiz-app
+    env: python
+    plan: free
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn quiz_app.wsgi:application"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: quizappdb
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: false
+      - key: RENDER_EXTERNAL_HOSTNAME
+        fromService:
+          name: quiz-app
+          type: web
+          property: hostname
+
+databases:
+  - name: quizappdb
+    plan: free
+    databaseName: quizapp
+    user: quizapp_user
